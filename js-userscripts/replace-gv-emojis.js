@@ -41,34 +41,48 @@ function throttle(func, wait, options) {
 }
 
 function replaceEmojis() {
-    window.setTimeout(function () {
-        emojiImgs = document.querySelectorAll('img[class^="PQ"]');
-        for(var i = 0, len = emojiImgs.length; i < len; i++) {
-            codePoint = emojiImgs[i].getAttribute('alt').codePointAt(0);
-            elemClass = emojiImgs[i].getAttribute('class');
-            newEmoji = document.createElement('div');
-            newEmoji.setAttribute('class', elemClass);
-            styleString = "display:inline-block;";
-            if (elemClass.endsWith('hJDwNd')) {
-                styleString += "font-size:4rem;margin-top:1.5rem;margin-bottom:-.75rem;";
-            } else {
-                styleString += "font-size:2rem;";
-            }
-            newEmoji.setAttribute("style", styleString);
-            newEmoji.innerHTML = "&#" + codePoint + ";";
-            emojiImgs[i].parentNode.replaceChild(newEmoji, emojiImgs[i]);
+    emojiImgs = document.querySelectorAll('img[class^="PQ"]');
+    for(var i = 0, len = emojiImgs.length; i < len; i++) {
+        codePoint = emojiImgs[i].getAttribute('alt').codePointAt(0);
+        switch (codePoint) {
+        case 9786:
+            codePoint = 128578;
+            break;
+        case 9829:
+            codePoint = 128159;
+            break;
         }
-    }, 2000);
+        elemClass = emojiImgs[i].getAttribute('class');
+        newEmoji = document.createElement('div');
+        newEmoji.setAttribute('class', elemClass);
+        styleString = "display:inline-block;";
+        if (elemClass.endsWith('hJDwNd')) {
+            styleString += "font-size:4rem;margin-top:1.5rem;margin-bottom:-.75rem;";
+        } else {
+            styleString += "font-size:2rem;";
+        }
+        newEmoji.setAttribute("style", styleString);
+        newEmoji.innerHTML = "&#" + codePoint + ";";
+        emojiImgs[i].parentNode.replaceChild(newEmoji, emojiImgs[i]);
+    }
     // console.log("Replaced emojis!");
 }
 
-function addScrollListenerThenReplace() {
-    var throttledReplaceEmojis = throttle(replaceEmojis, 1000); // run at most once per second when scrolling
-    document.querySelector('gv-infinite-scroll').children[0].addEventListener('scroll', throttledReplaceEmojis);
+function addListenersThenReplace() {
     replaceEmojis();
+    var throttledReplaceEmojis = throttle(replaceEmojis, 1000); // run at most once per second when scrolling
+    window.setTimeout(function() {
+        document.querySelector('gv-infinite-scroll').children[0].addEventListener('scroll', throttledReplaceEmojis);
+    }, 2000);
+    document.querySelector('gv-message-entry').addEventListener('keypress', function (e) {
+        var key = e.which || e.keyCode;
+        if (key === 13) { // 13 is enter
+            replaceEmojis();
+        }
+    });
 }
 
 (function() {
-    window.setTimeout(addScrollListenerThenReplace, 5000);
-    document.querySelector('gv-conversation-list').addEventListener('click', addScrollListenerThenReplace);
+    window.setTimeout(addListenersThenReplace, 6000);
+    document.querySelector('gv-conversation-list').addEventListener('click', addListenersThenReplace);
 })();
